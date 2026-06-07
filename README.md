@@ -1,1 +1,1 @@
-"# Repositorio de configuraci¢n de todo-list-aws" 
+# Repositorio de configuraciÂ¢n de todo-list-aws
