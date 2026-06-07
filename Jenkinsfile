@@ -18,6 +18,8 @@ pipeline {
                     sh 'whoami ; hostname'
                     git branch: env.BRANCH,
                         url: env.REPO_URL                
+                    // save a copy from original file
+                    sh 'mv samconfig.toml samconfig.toml.code || true'
                     // obtain samconfig.toml from config 
                     sh '''
                     rm -f samconfig.toml
@@ -131,7 +133,8 @@ pipeline {
             steps {
                 sh 'whoami ; hostname'
                 dir('code') {
-         
+                    // restore a copy from original file
+                     sh 'mv samconfig.toml.code samconfig.toml || true'
                     sshagent(credentials: ['github-ssh']) {
                         sh '''
                             set -e
