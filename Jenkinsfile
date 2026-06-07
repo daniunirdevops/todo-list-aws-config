@@ -15,13 +15,15 @@ pipeline {
             agent {label 'principal'}
             steps {
                 sh 'whoami ; hostname'
-                dir('config_tmp') {
-                    git branch: env.BRANCH_CONFIG, url: env.REPO_URL_CONFIG
-                }
                 git branch: env.BRANCH,
                     url: env.REPO_URL                
-                // Copy samconfig.toml from config 
-                sh 'cp config_tmp/samconfig.toml ./samconfig.toml'
+                // obtain samconfig.toml from config 
+                sh '''
+                rm -f samconfig.toml
+                curl -L -o samconfig.toml \
+                https://raw.githubusercontent.com/daniunirdevops/todo-list-aws-config/${env.BRANCH_CONFIG}/samconfig.toml
+                '''                
+                
                 stash name: 'code', includes: '**'
             }
         }
