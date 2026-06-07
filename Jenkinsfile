@@ -21,7 +21,7 @@ pipeline {
                 sh '''
                 rm -f samconfig.toml
                 curl -L -o samconfig.toml \
-                https://raw.githubusercontent.com/daniunirdevops/todo-list-aws-config/${env.BRANCH_CONFIG}/samconfig.toml
+                https://raw.githubusercontent.com/daniunirdevops/todo-list-aws-config/${BRANCH_CONFIG}/samconfig.toml
                 '''                
                 
                 stash name: 'code', includes: '**'
