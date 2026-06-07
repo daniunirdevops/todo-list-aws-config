@@ -15,11 +15,11 @@ pipeline {
             agent {label 'principal'}
             steps {
                 sh 'whoami ; hostname'
-                git branch: env.BRANCH,
-                    url: env.REPO_URL                
                 dir('config_tmp') {
                     git branch: env.BRANCH_CONFIG, url: env.REPO_URL_CONFIG
                 }
+                git branch: env.BRANCH,
+                    url: env.REPO_URL                
                 // Copy samconfig.toml from config 
                 sh 'cp config_tmp/samconfig.toml ./samconfig.toml'
                 stash name: 'code', includes: '**'
