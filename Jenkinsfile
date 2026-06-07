@@ -14,17 +14,19 @@ pipeline {
         stage('Get Code') {
             agent {label 'principal'}
             steps {
-                sh 'whoami ; hostname'
-                git branch: env.BRANCH,
-                    url: env.REPO_URL                
-                // obtain samconfig.toml from config 
-                sh '''
-                rm -f samconfig.toml
-                curl -L -o samconfig.toml \
-                https://raw.githubusercontent.com/daniunirdevops/todo-list-aws-config/${BRANCH_CONFIG}/samconfig.toml
-                '''                
-                
-                stash name: 'code', includes: '**'
+                dir('code') {
+                    sh 'whoami ; hostname'
+                    git branch: env.BRANCH,
+                        url: env.REPO_URL                
+                    // obtain samconfig.toml from config 
+                    sh '''
+                    rm -f samconfig.toml
+                    curl -L -o samconfig.toml \
+                    https://raw.githubusercontent.com/daniunirdevops/todo-list-aws-config/${BRANCH_CONFIG}/samconfig.toml
+                    '''                
+                    
+                    stash name: 'code', includes: '**'
+                }
             }
         }
         stage('Checkout Config') {
@@ -128,38 +130,40 @@ pipeline {
             agent { label 'principal' }
             steps {
                 sh 'whoami ; hostname'
-                unstash 'code'     
-                sshagent(credentials: ['github-ssh']) {
-                    sh '''
-                        set -e
-                        git config user.email "jenkins@ci"
-                        git config user.name "Jenkins CI"
-        
-                        git fetch origin    
-                        
-                        git checkout -B master origin/master
-                        git pull origin master
-                        
-                        git merge develop --no-ff|| true
-                        
-                        git ls-files -u
-                        
-                        for f in $(git ls-files -u | awk '{print $4}' | grep -E '^Jenkinsfile'); do
-                        #for f in Jenkinsfile Jenkinsfile_agentes; do
-                            if git ls-files -u | grep -q "$f"; then
-                                git checkout --ours "$f"
-                                git add "$f"
+                dir('code') {
+         
+                    sshagent(credentials: ['github-ssh']) {
+                        sh '''
+                            set -e
+                            git config user.email "jenkins@ci"
+                            git config user.name "Jenkins CI"
+            
+                            git fetch origin    
+                            
+                            git checkout -B master origin/master
+                            git pull origin master
+                            
+                            git merge develop --no-ff|| true
+                            
+                            git ls-files -u
+                            
+                            for f in $(git ls-files -u | awk '{print $4}' | grep -E '^Jenkinsfile'); do
+                            #for f in Jenkinsfile Jenkinsfile_agentes; do
+                                if git ls-files -u | grep -q "$f"; then
+                                    git checkout --ours "$f"
+                                    git add "$f"
+                                fi
+                            done
+    
+                            if ! git diff --quiet; then
+                                git commit -m "Merge develop into master (auto-resolved Jenkinsfile)"
                             fi
-                        done
-
-                        if ! git diff --quiet; then
-                            git commit -m "Merge develop into master (auto-resolved Jenkinsfile)"
-                        fi
-                        #force ssh
-                        git remote set-url origin git@github.com:daniunirdevops/todo-list-aws.git                        
-                        git push origin master
-                    '''
-            }
+                            #force ssh
+                            git remote set-url origin git@github.com:daniunirdevops/todo-list-aws.git                        
+                            git push origin master
+                        '''
+                    }
+                }
             }
         }
      }
